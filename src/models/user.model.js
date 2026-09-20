@@ -47,7 +47,7 @@ refreshToken: {
 }
 },
 {
-    timesstamps: true
+    timestamps: true
 }
 
 )
