@@ -1,11 +1,6 @@
-//require('dotenv').config({path: './env'})
-import dotenv from "dotenv";
+// Environment variables are loaded in src/app.js before any usage.
 import connectDB from "./db/index.js";
 import app from "./app.js";
-
-dotenv.config({
-    path: "./.env"
-});
 
 console.log(process.env.PORT);
 
@@ -27,41 +22,3 @@ connectDB()
 .catch((err) => {
     console.log("MongoDB connection failed:", err);
 });
-
-
-
-
-/*
-import express from "express"
-const app = express()
-connectDB()
-.then(() => {
-    app.listen(process.env.PORT || 8000, () => {
-        console.log(`Server is running at port: ${process.env.PORT || 8000}`);
-    });
-})
-.catch((err) => {
-    console.log("MongoDB connection failed:", err);
-});
-( async () => {
-    try{
-        await mongoose.connect(`${process.env.
-            MONGODM_URI}/${DB_NAME}`)
-            app.on("error", (error) =>{
-                console.log("ERROR: ", error);
-                throw error
-            })
-
-            app.listen(process.env.PORT, ()=> {
-                console.log(`App is listening on port $
-                    {process.env.PORT}`);
-            })
-
-
-    } catch (error) {
-        console.error("ERROR: ", error)
-        throw err
-    }
-}) ()
-
-*/
