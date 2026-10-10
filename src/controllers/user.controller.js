@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { json } from "express";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -380,7 +381,14 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
       }
     }
   ])
-  
+  if (!channel?.lenght) {
+    throw new ApiError(404, "channel does not exists")
+  }
+  return res
+  .status(200)
+  json(
+    new ApiResponse(200, channel[0],"User channel fetched successfully")
+  )
 })
 
 export {
