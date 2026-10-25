@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
-import { json } from "express";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -30,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // validation - not empty
   if (
-    [fullName, email, username, password].some((field) => field?.trim() === "")
+    [fullName, email, username, password].some((field) => !field?.trim())
   ) {
     throw new ApiError(400, "All fields are required");
   }
@@ -244,17 +244,17 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async(req, res) => {
   return res
   .status(200)
-  .json(200, req.user, "current user fetched successfully")
+  .json(new ApiResponse(200, req.user, "current user fetched successfully"))
 
 })
 
 const updateAccountDetails = asyncHandler(async(req,res) =>{
   const {fullName, email} = req.body
 
-  if (!fullNamw || !email){
+  if (!fullName || !email){
     throw new ApiError(400, "All fields are required")
   }
- const user = User.findByIdAndUpdate(req.user?._id,
+ const user = await User.findByIdAndUpdate(req.user?._id,
   {
     $set: {
       fullName,
@@ -266,7 +266,7 @@ const updateAccountDetails = asyncHandler(async(req,res) =>{
 
 return res
 .status(200)
-.json(new ApiResponse(200, user, "Accouont details updated successfully"))
+.json(new ApiResponse(200, user, "Account details updated successfully"))
 })
 
 const updateUserAvatar = asyncHandler(async(req, res) =>
@@ -275,9 +275,8 @@ const updateUserAvatar = asyncHandler(async(req, res) =>
   if(!avatarLocalPath){
     throw new ApiError(400, "Avatar file is missing")
   }
-  const avatar = await uploadOnCloudinary
-  (avatarLocalPath)
-  if (avatar.url){
+  const avatar = await uploadOnCloudinary(avatarLocalPath)
+  if (!avatar?.url){
     throw new ApiError(400, "Error while uploading on avatar")
   }
   const user = await User.findByIdAndUpdate(
@@ -290,22 +289,21 @@ const updateUserAvatar = asyncHandler(async(req, res) =>
     {new: true}
   ).select("-password")
   return res
-  .stauts(200)
+  .status(200)
   .json(
     new ApiResponse(200, user, "Avatar image updated successfully")
   )
 })
 
-const updateUserCpverImage = asyncHandler(async(req, res) =>
+const updateUserCoverImage = asyncHandler(async(req, res) =>
 {
   const coverImageLocalPath = req.file?.path
   if(!coverImageLocalPath){
     throw new ApiError(400, "Cover image file is missing")
   }
-  const coverImage = await uploadOnCloudinary
-  (coverImageLocalPath)
-  if (coverImage.url){
-    throw new ApiError(400, "Error while uploading on avatar")
+  const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+  if (!coverImage?.url){
+    throw new ApiError(400, "Error while uploading on cover image")
   }
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -317,7 +315,7 @@ const updateUserCpverImage = asyncHandler(async(req, res) =>
     {new: true}
   ).select("-password")
   return res
-  .stauts(200)
+  .status(200)
   .json(
     new ApiResponse(200, user, "Cover image updated successfully")
   )
@@ -381,12 +379,12 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
       }
     }
   ])
-  if (!channel?.lenght) {
+  if (!channel?.length) {
     throw new ApiError(404, "channel does not exists")
   }
   return res
   .status(200)
-  json(
+  .json(
     new ApiResponse(200, channel[0],"User channel fetched successfully")
   )
 })
@@ -424,7 +422,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
           {
             $addFields:{
               owner:{
-                $First: "$owner"
+                $first: "$owner"
               }
             }
           }
@@ -438,7 +436,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
   .json(
     new ApiResponse(
       200,
-      user[0].WatchHistory,
+      user[0]?.watchHistory || [],
       "Watch history fetched successfully"
     )
   )
